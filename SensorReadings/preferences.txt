@@ -1,0 +1,43 @@
+# THIS IS THE CONFIGURATION FILE
+# LINES THAT START WITH # ARE NOT TAKEN INTO CONSIDERATION
+# DO NOT MODIFY UNLESS SURE OF WHAT YOU ARE DOING
+
+# SENSORS QUANTITY
+RoomTemperatureSensors 3
+BoardTemperatureSensors 2
+TemperatureSensors 5
+HumiditySensors 1
+PressureSensors 0
+
+# READINGS DANGER LIMITS
+TempUpperLimit 25
+TempLowerLimit 15
+HumidUpperLimit 30
+HumidLowerLimit 20
+PressUpperLimit 1.1
+PressLowerLimit 0.9
+
+# INFO REGARDING THE LIVE GRAPH
+WindowWidth 1200
+WindowHeight 800
+XOffset 0
+YOffset 0
+FPS 30
+TempPrecision 1
+TempLocation 20
+HumidPrecision 1
+HumidLocation 23
+PressPrecision 0.05
+PressLocation 1
+LiveHistory 500
+VisibleHistory 20
+MaxScroll 479
+
+# INPUT EQUATION PARAMETERS
+# 5 Temperature 1 Humidity
+NewParam 1 0
+NewParam 1 0
+NewParam 1 0
+NewParam 1 0
+NewParam 1 0
+NewParam 1 0
