@@ -1,4 +1,4 @@
-#!/usr/bin/env/python3
+#!/usr/bin/env/python
 """
 Handles input data from the Arduino board, creates Logs and saves the live data in binary files.
 
@@ -21,13 +21,11 @@ __email__ = "apkasapis@gmail.com"
 __status__ = "Production"
 
 # Directory pointing to the location of the folder where the Log folder and the live binary files will be created.
-file_loc = '/media/alex/Storage/Projects/CERNuino/SensorReadings/'
+file_loc = '/LOCATION/TO/DIRECTORY/SensorReadings/'
 
 SETTINGS = {
     # Sensor Quantity
     'TEMP_S': -1, 'HUMID_S': -1, 'PRESS_S': -1,
-    # Readings danger limits
-    'TEMP_UPPER': -1, 'TEMP_LOWER': -1, 'HUMID_UPPER': -1, 'HUMID_LOWER': -1, 'PRESS_UPPER': -1, 'PRESS_LOWER': -1,
     # Info regarding the graph
     'LIVE_H': -1
 }
@@ -61,18 +59,6 @@ def init_conf():
                     SETTINGS['HUMID_S'] = int(setting[1])
                 elif setting[0] == 'PressureSensors':
                     SETTINGS['PRESS_S'] = int(setting[1])
-                elif setting[0] == 'TempUpperLimit':
-                    SETTINGS['TEMP_UPPER'] = float(setting[1])
-                elif setting[0] == 'TempLowerLimit':
-                    SETTINGS['TEMP_LOWER'] = float(setting[1])
-                elif setting[0] == 'HumidUpperLimit':
-                    SETTINGS['HUMID_UPPER'] = float(setting[1])
-                elif setting[0] == 'HumidLowerLimit':
-                    SETTINGS['HUMID_LOWER'] = float(setting[1])
-                elif setting[0] == 'PressUpperLimit':
-                    SETTINGS['PRESS_UPPER'] = float(setting[1])
-                elif setting[0] == 'PressLowerLimit':
-                    SETTINGS['PRESS_LOWER'] = float(setting[1])
                 elif setting[0] == 'LiveHistory':
                     SETTINGS['LIVE_H'] = float(setting[1])
                 elif setting[0] == 'NewParam':
@@ -93,63 +79,26 @@ def modify_output(value, index):
     return str(number)
 
 
-def get_comma_num(number):
-    """
-    Due to localization, some times the log files need to be filled with floats where the, point is a comma. So
-    this function converts a float number to a string representing this number, where the floating point is a comma.
-    :param number: The float number.
-    :return: The string representing the input number, seperated by a comma instead of a period.
-    """
-    string_num = str(float(number))
-    splitted = string_num.split('.')
-    try:
-        return '{},{}'.format(splitted[0], splitted[1])
-    except IndexError:
-        print('ERROR: Float number not valid {}'.format(number))
-        return ''
-
-
-def get_period_num(number):
-    """
-    Convert a number where the floating point is a comma, to a one where it is a period. (See above function)
-    :param number: The string number.
-    :return: The converted number where the floating point is a period.
-    """
-    splitted = number.split(',')
-    try:
-        return '{}.{}'.format(splitted[0], splitted[1])
-    except IndexError:
-        print('ERROR: Float string number not valid {}'.format(number))
-        return ''
-
-
 # Write the data string to the logs
-def update_logs(data_str, danger):
-    # Get the date
-    date = datetime.now()
+def update_logs(data_str):
 
-    # Create the folder where the log file will be saved
+    # Make sure the folder to store the Log files is created
     if not os.path.isdir(file_loc + 'Logs'):
         os.makedirs(file_loc + 'Logs')
 
-    if not os.path.isdir(file_loc + 'Logs/Errors'):
-        os.makedirs(file_loc + 'Logs/Errors')
+    # Get the date
+    date = datetime.now()
 
     # Create the path string to the file
     file_path = file_loc + 'Logs/{}-{}-{}.doc'.format(date.day, date.month, date.year)
-    error_file_path = file_loc + 'Logs/Errors/ErrorLogs.doc'
 
-    # Output to the file
-    output_string = '{}-{}-{}-{}\t{}\n'.format(date.day, date.month, date.year, date.time(), data_str)
-    text_file = open(file_path, 'a')
-    text_file.write(output_string)
-    text_file.close()
+    # Create the final output string
+    timestamp_str = date.strftime('%d-%m-%Y %H:%M:%S.%f')[:-4]
+    output_string = '{}\t{}\n'.format(timestamp_str, data_str)
 
-    # If the danger parameter is True, output to another file
-    if danger:
-        error_file = open(error_file_path, 'a')
-        error_file.write(output_string)
-        error_file.close()
+    # Append the string to the Log file
+    with open(file_path, 'a') as file:
+        file.write(output_string)
 
 
 # Update the binary live data files
@@ -194,27 +143,12 @@ def mainloop(port):
                 press_string += '{} '.format(str(num))
 
         # Split the strings into lists
-        t_list_str = [get_comma_num(temp) for temp in temps_string.split()]
-        h_list_str = [get_comma_num(humid) for humid in humid_string.split()]
-        p_list_str = [get_comma_num(press) for press in press_string.split()]
-        #print(t_list_str, '+', h_list_str, '+', p_list_str)
-
-        error = False
-        for value in t_list_str:
-            num_value = float(get_period_num(value))
-            if num_value > SETTINGS['TEMP_UPPER'] or num_value < SETTINGS['TEMP_LOWER']:
-                error = True
-        for value in h_list_str:
-            num_value = float(get_period_num(value))
-            if num_value > SETTINGS['HUMID_UPPER'] or num_value < SETTINGS['HUMID_LOWER']:
-                error = True
-        for value in p_list_str:
-            num_value = float(get_period_num(value))
-            if num_value > SETTINGS['PRESS_UPPER'] or num_value < SETTINGS['PRESS_LOWER']:
-                error = True
+        t_list_str = temps_string.split()
+        h_list_str = humid_string.split()
+        p_list_str = press_string.split()
 
         # Update the logs
-        update_logs('\t'.join(t_list_str + h_list_str + p_list_str), error)
+        update_logs('\t'.join(t_list_str + h_list_str + p_list_str))
 
         # Update the list
         if len(temp_list) >= SETTINGS['LIVE_H']:
@@ -222,16 +156,11 @@ def mainloop(port):
             del humid_list[0]
             del press_list[0]
         temp_list.append(temps_string.split())
-
-        #print(t_list_str)
-        #print(temp_list[-1])
         
         humid_list.append(humid_string.split())
         press_list.append(press_string.split())
 
         update_live_data()
-
-        time.sleep(2)
 
 
 # Handle the initialization of the program
@@ -300,39 +229,20 @@ def fake_mainloop():
         tmp = temps_string.split()
         for i in range(len(tmp)):
             tmp[i] = modify_output(tmp[i], i)
-        temps_string = (' '.join(tmp))
+        temps_string = ('\t'.join(tmp))
 
         tmp = humid_string.split()
         for i in range(len(tmp)):
             tmp[i] = modify_output(tmp[i], SETTINGS['TEMP_S'] + i)
-        humid_string = (' '.join(tmp))
+        humid_string = ('\t'.join(tmp))
 
         tmp = press_string.split()
         for i in range(len(tmp)):
             tmp[i] = modify_output(tmp[i], SETTINGS['TEMP_S'] + SETTINGS['HUMID_S'] + i)
-        press_string = (' '.join(tmp))
-
-        # Split the strings into lists
-        t_list_str = [get_comma_num(temp) for temp in temps_string.split()]
-        h_list_str = [get_comma_num(humid) for humid in humid_string.split()]
-        p_list_str = [get_comma_num(press) for press in press_string.split()]
-
-        error = False
-        for value in t_list_str:
-            num_value = float(get_period_num(value))
-            if num_value > SETTINGS['TEMP_UPPER'] or num_value < SETTINGS['TEMP_LOWER']:
-                error = True
-        for value in h_list_str:
-            num_value = float(get_period_num(value))
-            if num_value > SETTINGS['HUMID_UPPER'] or num_value < SETTINGS['HUMID_LOWER']:
-                error = True
-        for value in p_list_str:
-            num_value = float(get_period_num(value))
-            if num_value > SETTINGS['PRESS_UPPER'] or num_value < SETTINGS['PRESS_LOWER']:
-                error = True
+        press_string = ('\t'.join(tmp))
 
         # Update the logs
-        update_logs('\t'.join(t_list_str + h_list_str + p_list_str), error)
+        update_logs(temps_string + '\t' + humid_string + '\t' + press_string)
 
         # Update the list
         if len(temp_list) >= SETTINGS['LIVE_H']:

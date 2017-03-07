@@ -1,7 +1,6 @@
 import sys
 
 import tkinter as tk
-from tkinter import ttk
 from tkinter import messagebox
 
 import matplotlib
@@ -20,7 +19,7 @@ import os
 from datetime import datetime
 
 
-file_loc = '/media/alex/Storage/Projects/CERNuino/SensorReadings/'
+file_loc = '/LOCATION/TO/DIRECTORY/SensorReadings/'
 
 SETTINGS = {
     # Application Info
@@ -41,10 +40,10 @@ SETTINGS = {
 EQ_PARAMS = []
 
 # A0 A1 A4
-RT_DISPLAY = ['2', '3', '4', '5', '5', '6', '7', '8']
+RT_DISPLAY = ['2', '3', '4']
 
 # A2 A3
-BT_DISPLAY = ['5', 'KOYTI', 'KOYTI', '12', '13', '14']
+BT_DISPLAY = ['X', 'Y']
 
 # PIN4
 H_DISPLAY = ['1', '2']
